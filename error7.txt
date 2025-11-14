@@ -1,0 +1,59 @@
+Error: Failed to run sql query: ERROR: 42703: column "entity_id" does not exist LINE 40: SELECT id FROM auth_identity WHERE entity_id = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' LIMIT 1 ^
+
+supabase AI debugger:
+
+elp me to debug the attached sql snippet which gives the following error:
+
+Failed to run sql query: ERROR: 42703: column "entity_id" does not exist LINE 40: SELECT id FROM auth_identity WHERE entity_id = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' LIMIT 1 ^
+
+-- Complete admin user creation for Medusa v2 with Supabase Auth...
+
+
+
+Reasoned
+I'll list the database tables and installed extensions to check schema and confirm column names referenced in your query. I'll call list_tables and list_extensions now.
+
+
+Ran list_tables
+
+Reasoned
+Summary / cause
+The error is:
+
+ERROR: 42703: column "entity_id" does not exist LINE 40: SELECT id FROM auth_identity WHERE entity_id = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' LIMIT 1
+
+From your snippet you reference a CTE named find_auth_identity:
+
+, find_auth_identity AS ( SELECT id FROM auth_identity WHERE entity_id = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' LIMIT 1 )
+
+But in your database schema the table is public.auth_identity (not auth.auth_identity) and its columns (from the schema listing) are:
+
+id
+app_metadata
+created_at
+updated_at
+deleted_at
+There is no column named entity_id in public.auth_identity. That's why Postgres complains.
+
+Fix options
+Pick one of these depending on intent:
+
+If you meant to look up by auth.identities (Supabase's auth.identities table)
+Use the correct table and column. The Supabase Auth "identities" table exists in schema auth with columns: id, provider_id, user_id, identity_data, email (generated).
+Example: to find the identity row for a provider-specific id (e.g., Medusa's entity id stored in identity_data) you must query auth.identities and inspect identity_data JSON. For example, if identity_data stores {"id": "..."} or {"entity_id": "..."}, adapt accordingly.
+If you meant to use public.auth_identity table and it actually contains the Medusa entity id under another column (e.g., id or app_metadata)
+Inspect app_metadata (jsonb) or other columns. For example, if you stored the Medusa entity id inside app_metadata ->> 'entity_id', then change the query to: SELECT id FROM public.auth_identity WHERE app_metadata ->> 'entity_id' = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' LIMIT 1;
+If the column should exist but doesn't (schema mismatch)
+Create the column on public.auth_identity (only if you want to persist entity_id there). Example (explicit confirm required before destructive/structural changes): ALTER TABLE public.auth_identity ADD COLUMN entity_id text; Then populate it accordingly.
+Recommended minimal change for your script
+Replace your find_auth_identity CTE with a query against the actual table/column. Two likely correct variants:
+
+A) If you stored Medusa entity id in provider_identity.auth_identity_id foreign key relationship (your provider_identity references public.auth_identity.id), but want to find auth_identity by app_metadata, use:
+
+, find_auth_identity AS ( SELECT id FROM public.auth_identity WHERE app_metadata ->> 'entity_id' = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' LIMIT 1 )
+
+B) If the Medusa entity id is stored in auth.identities.identity_data (common for Supabase external providers), use:
+
+, find_auth_identity AS ( SELECT id FROM auth.identities WHERE identity_data ->> 'entity_id' = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' LIMIT 1 )
+
+Use A or B depending on where Medusa stores the mapping.

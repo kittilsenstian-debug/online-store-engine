@@ -1,0 +1,18 @@
+google AI suggestion:
+
+Since no users currently exist, you must create the first admin user using the Medusa CLI tool via your server's terminal. 
+Ensure your Medusa server is running.
+Open your terminal and navigate to your Medusa application's root directory.
+Run the following command, replacing <email> with your desired email address and <password> with your new secure password:
+bash
+npx medusa user -e <email> -p <password>
+Vær forsiktig når du bruker koden
+
+For example:
+bash
+npx medusa user -e admin@example.com -p mySecurePassword123
+Vær forsiktig når du bruker koden
+
+The command will create an admin user in your database with the specified credentials.
+You can now log in to your Medusa Admin dashboard (usually at http://localhost:9000/app) using these credentials. 
+Alternatively, when you first set up the project, running the medusa new command with the --seed option would have automatically created a default user with the credentials admin@medusa-test.com and supersecret. If you used this option, you can log in with those default credentials immediately. 

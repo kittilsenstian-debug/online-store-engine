@@ -1,0 +1,67 @@
+localhost 8000 error:
+
+## Error Type
+Runtime Error
+
+## Error Message
+A valid publishable key is required to proceed with the request
+
+
+    at <unknown> (src/middleware.ts:40:15)
+    at async getRegionMap (src/middleware.ts:27:25)
+    at async middleware (src/middleware.ts:115:21)
+
+## Code Frame
+  38 |
+  39 |       if (!response.ok) {
+> 40 |         throw new Error(json.message)
+     |               ^
+  41 |       }
+  42 |
+  43 |       return json
+
+Next.js version: 15.5.6 (Turbopack)
+
+
+TErminal output:
+
+PS C:\Users\kitti> cd C:\online-store-engine
+PS C:\online-store-engine>    cd storefront
+PS C:\online-store-engine\storefront>    npm run dev
+
+> medusa-next@1.0.3 dev
+> next dev --turbopack -p 8000
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\online-store-engine\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles:
+   * C:\online-store-engine\storefront\package-lock.json
+
+   ▲ Next.js 15.5.6 (Turbopack)
+   - Local:        http://localhost:8000
+   - Network:      http://172.29.16.203:8000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled instrumentation Node.js in 9ms
+ ✓ Compiled instrumentation Edge in 12ms
+ ✓ Compiled middleware in 70ms
+ ✓ Ready in 933ms
+ ⨯ Error: A valid publishable key is required to proceed with the request
+    at <unknown> (storefront\src\middleware.ts:40:15)
+    at async getRegionMap (storefront\src\middleware.ts:27:25)
+    at async middleware (storefront\src\middleware.ts:115:21)
+  38 |
+  39 |       if (!response.ok) {
+> 40 |         throw new Error(json.message)
+     |               ^
+  41 |       }
+  42 |
+  43 |       return json
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 835ms
+ GET / 404 in 3ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 2.4s

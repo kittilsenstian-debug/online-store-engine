@@ -1,0 +1,127 @@
+PS C:\Users\kitti> cd C:\online-store-engine
+PS C:\online-store-engine>    npx medusa exec ./src/scripts/get-publishable-key.ts
+info:    redisUrl not found. A fake redis instance will be used.
+info:    Executing script at ./src/scripts/get-publishable-key.ts...
+info:    redisUrl not found. A fake redis instance will be used.
+info:    No link to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+warn:    Local Event Bus installed. This is not recommended for production.
+info:    Locking module: Using "in-memory" as default.
+error:   Error syncing the notification providers: select "n0".* from "notification_provider" as "n0" where "n0"."deleted_at" is null order by "n0"."id" asc - relation "notification_provider" does not exist
+info:    No workflow to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\workflows. skipped.
+info:    Fetching publishable API keys...
+info:
+✅ Found publishable API keys:
+info:      - Webshop: apk_01KA00183X9KRZVXJ0JGZYMEZ3
+info:        Created: 11/14/2025, 2:35:16 AM
+info:
+📋 Use this publishable key in your storefront .env.local:
+info:       NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=apk_01KA00183X9KRZVXJ0JGZYMEZ3
+info:
+✅ Updating storefront/.env.local automatically...
+info:    ✅ Updated storefront/.env.local successfully!
+info:    Finished executing script.
+PS C:\online-store-engine>
+
+
+terminal output:
+PS C:\online-store-engine>    cd storefront
+PS C:\online-store-engine\storefront>    npm run dev
+
+> medusa-next@1.0.3 dev
+> next dev --turbopack -p 8000
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\online-store-engine\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles:
+   * C:\online-store-engine\storefront\package-lock.json
+
+   ▲ Next.js 15.5.6 (Turbopack)
+   - Local:        http://localhost:8000
+   - Network:      http://172.29.16.203:8000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled instrumentation Node.js in 7ms
+ ✓ Compiled instrumentation Edge in 12ms
+ ✓ Compiled middleware in 70ms
+ ✓ Ready in 919ms
+ ⨯ Error: A valid publishable key is required to proceed with the request
+    at <unknown> (storefront\src\middleware.ts:40:15)
+    at async getRegionMap (storefront\src\middleware.ts:27:25)
+    at async middleware (storefront\src\middleware.ts:115:21)
+  38 |
+  39 |       if (!response.ok) {
+> 40 |         throw new Error(json.message)
+     |               ^
+  41 |       }
+  42 |
+  43 |       return json
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 831ms
+ GET / 404 in 2ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 2.3s
+ ⨯ Error: A valid publishable key is required to proceed with the request
+    at <unknown> (storefront\src\middleware.ts:40:15)
+    at async getRegionMap (storefront\src\middleware.ts:27:25)
+    at async middleware (storefront\src\middleware.ts:115:21)
+  38 |
+  39 |       if (!response.ok) {
+> 40 |         throw new Error(json.message)
+     |               ^
+  41 |       }
+  42 |
+  43 |       return json
+ GET / 404 in 1ms
+ ⨯ Error: A valid publishable key is required to proceed with the request
+    at <unknown> (storefront\src\middleware.ts:40:15)
+    at async getRegionMap (storefront\src\middleware.ts:27:25)
+    at async middleware (storefront\src\middleware.ts:115:21)
+  38 |
+  39 |       if (!response.ok) {
+> 40 |         throw new Error(json.message)
+     |               ^
+  41 |       }
+  42 |
+  43 |       return json
+ GET / 404 in 1ms
+ ⨯ Error: A valid publishable key is required to proceed with the request
+    at <unknown> (storefront\src\middleware.ts:40:15)
+    at async getRegionMap (storefront\src\middleware.ts:27:25)
+    at async middleware (storefront\src\middleware.ts:115:21)
+  38 |
+  39 |       if (!response.ok) {
+> 40 |         throw new Error(json.message)
+     |               ^
+  41 |       }
+  42 |
+  43 |       return json
+ GET / 404 in 1ms
+
+
+localhost 8000 outoput:
+
+## Error Type
+Runtime Error
+
+## Error Message
+A valid publishable key is required to proceed with the request
+
+
+    at <unknown> (src/middleware.ts:40:15)
+    at async getRegionMap (src/middleware.ts:27:25)
+    at async middleware (src/middleware.ts:115:21)
+
+## Code Frame
+  38 |
+  39 |       if (!response.ok) {
+> 40 |         throw new Error(json.message)
+     |               ^
+  41 |       }
+  42 |
+  43 |       return json
+
+Next.js version: 15.5.6 (Turbopack)
+

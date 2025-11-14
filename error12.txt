@@ -1,0 +1,36 @@
+PS C:\online-store-engine> npx medusa exec ./src/scripts/set-password-via-api.ts
+info:    redisUrl not found. A fake redis instance will be used.
+info:    Executing script at ./src/scripts/set-password-via-api.ts...
+info:    redisUrl not found. A fake redis instance will be used.
+info:    No link to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+warn:    Local Event Bus installed. This is not recommended for production.
+info:    Locking module: Using "in-memory" as default.
+error:   Error syncing the notification providers: select "n0".* from "notification_provider" as "n0" where "n0"."deleted_at" is null order by "n0"."id" asc - relation "notification_provider" does not exist
+info:    No workflow to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\workflows. skipped.
+info:    Setting password via Medusa API...
+info:    Found user: Kittilsen.stian@gmail.com (ID: user_01KA00BB9FW0EM4E4TT4CYEX0P)
+info:    Checking for existing emailpass provider...
+info:    Creating emailpass provider with password...
+info:    ✅ Created new provider with password
+info:    ✅ Created auth provider: authid_01KA03560BJSX921N3XPYYYGJ4
+info:    Provider: undefined
+info:    Entity ID: undefined
+info:    Email: N/A
+info:
+info:    ✅ Success! Auth provider created with password.
+info:
+info:    Provider ID: authid_01KA03560BJSX921N3XPYYYGJ4
+info:    Provider: undefined
+info:    Entity ID: undefined
+info:
+info:    You can now log in at: http://localhost:9000/app
+info:    Email: Kittilsen.stian@gmail.com
+info:    Password: kOkkolille32891657
+info:    Finished executing script.
+PS C:\online-store-engine>
+
+server terminal output:
+
+http:    GET /admin/users/me ← http://localhost:9000/app (401) - 0.661 ms
+info:    Invalid email or password
+http:    POST /auth/user/emailpass ← http://localhost:9000/app/login (401) - 42.106 ms

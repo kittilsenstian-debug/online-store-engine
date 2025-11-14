@@ -1,0 +1,104 @@
+Error: Failed to run sql query: ERROR: 23502: null value in column "auth_identity_id" of relation "provider_identity" violates not-null constraint DETAIL: Failing row contains (eaeb3176-faf8-44a9-bd80-42e890ee0b80, user_01KA00BB9FW0EM4E4TT4CYEX0P, emailpass, null, {"email": "Kittilsen.stian@gmail.com"}, {"email": "Kittilsen.stian@gmail.com", "provider": "emailpass", ..., 2025-11-14 02:04:19.822382+00, 2025-11-14 02:04:19.822382+00, null).
+
+supabase AI debugger says:
+
+Help me to debug the attached sql snippet which gives the following error:
+
+Failed to run sql query: ERROR: 23502: null value in column "auth_identity_id" of relation "provider_identity" violates not-null constraint DETAIL: Failing row contains (eaeb3176-faf8-44a9-bd80-42e890ee0b80, user_01KA00BB9FW0EM4E4TT4CYEX0P, emailpass, null, {"email": "Kittilsen.stian@gmail.com [blocked]"}, {"email": "Kittilsen.stian@gmail.com [blocked]", "provider": "emailpass", ..., 2025-11-14 02:04:19.822382+00, 2025-11-14 02:04:19.822382+00, null).
+
+-- Complete admin user creation for Medusa v2 with Supabase Auth (SIMPLIFIED)...
+
+
+
+Reasoned
+I'll gather schema context: list tables, list extensions, and list edge functions to help debug the constraint error and confirm table structures. I'll call each tool with minimal inputs.
+
+
+Ran list_tables
+
+Reasoned
+Summary of the failure
+Error:
+
+ERROR 23502: null value in column "auth_identity_id" of relation "provider_identity" violates not-null constraint
+Failing row shows auth_identity_id = null.
+From your schema dump I confirmed:
+
+public.provider_identity has column auth_identity_id (text) and a foreign key to public.auth_identity.id.
+That column currently has no DEFAULT and appears to be declared NOT NULL (constraint enforced).
+Therefore your INSERT/SELECT into provider_identity attempted to insert a NULL auth_identity_id. PostgreSQL refused it.
+
+Why it happens in your snippet
+In your Step 2 CTE you try to find an existing auth_identity_id:
+
+, find_existing_auth_identity AS ( SELECT auth_identity_id FROM provider_identity WHERE entity_id = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' AND auth_identity_id IS NOT NULL LIMIT 1 )
+
+Then in Step 3 you use: (SELECT auth_identity_id FROM find_existing_auth_identity)
+
+If find_existing_auth_identity returns no rows, the scalar subquery returns NULL and you attempt to insert a NULL into provider_identity.auth_identity_id — but that column is NOT NULL. That triggers the error.
+
+Additionally:
+
+There is a separate table public.auth_identity with primary key id (text). Your code inserts a user into auth.users but never inserts a row into auth_identity. If the provider_identity.auth_identity_id is expected to reference auth_identity.id, you must create the corresponding auth_identity row (or otherwise obtain a valid id).
+Options to fix (pick one)
+Insert a matching auth_identity row and use its id
+Create an auth_identity row that links to the new auth user (or otherwise has the correct app_metadata).
+Use that id in provider_identity.auth_identity_id.
+Example (safe, explicit):
+
+Create auth_identity, return id, then use it in provider_identity insert.
+Make provider_identity.auth_identity_id nullable (if data model allows)
+If your data model permits provider_identity without auth_identity, alter the column to allow NULL: ALTER TABLE public.provider_identity ALTER COLUMN auth_identity_id DROP NOT NULL;
+Only do this if foreign-key integrity and application logic permit empty auth_identity.
+Provide a fallback non-null value in your INSERT (not recommended unless meaningful)
+Use COALESCE((SELECT ...), '') — but that requires a valid id that exists in auth_identity (or none if column made nullable).
+Avoid inserting provider_identity when no auth_identity exists
+Only insert provider_identity when you have an auth_identity_id. Change the INSERT ... SELECT to add AND (SELECT auth_identity_id FROM find_existing_auth_identity) IS NOT NULL in the WHERE clause so it skips creation when no auth_identity exists.
+Create provider_identity row but set auth_identity_id to a newly created auth_identity that you create from the new auth user (recommended if model requires link)
+Concrete recommended change (create auth_identity then provider_identity)
+This is the safest: create auth_identity referencing the new auth user, then insert provider_identity using that id.
+
+High level SQL flow (illustrative — I can run it if you want):
+
+Create auth_identity row and return id: INSERT INTO auth_identity (id, app_metadata) VALUES (gen_random_uuid()::text, '{"created_by":"script"}') RETURNING id;
+
+Use that id in provider_identity insert instead of the subquery that can be empty.
+
+If you prefer to keep it all in one statement, use the new_auth_user CTE to create both and then insert provider_identity with the created auth_identity id.
+
+Example snippet you can run (illustrative only — will not be executed unless you ask me to run it):
+
+SQL Query
+
+
+
+WITH new_auth_user AS (
+  INSERT INTO auth.users (...) VALUES (...) RETURNING id, email
+),
+new_auth_identity AS (
+  INSERT INTO auth_identity (id, app_metadata)
+  SELECT gen_random_uuid()::text, jsonb_build_object('supabase_user_id', id)
+  FROM new_auth_user
+  RETURNING id
+)
+INSERT INTO provider_identity (id, provider, entity_id, auth_identity_id, provider_metadata, user_metadata)
+SELECT
+  gen_random_uuid()::text,
+  'emailpass',
+  'user_01KA00BB9FW0EM4E4TT4CYEX0P',
+  new_auth_identity.id,
+  jsonb_build_object('supabase_user_id', new_auth_user.id::text, 'email', new_auth_user.email, 'provider', 'emailpass'),
+  jsonb_build_object('email', new_auth_user.email)
+FROM new_auth_user, new_auth_identity
+WHERE NOT EXISTS (
+  SELECT 1 FROM provider_identity WHERE entity_id = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' AND provider = 'emailpass'
+);
+
+Notes:
+
+I used gen_random_uuid()::text because provider_identity.id is text in your schema.
+Ensure auth_identity.id type and provider_identity.auth_identity_id types match (both text).
+If auth_identity needs specific fields (app_metadata shape etc.) adapt accordingly.
+Quick checklist so we can proceed
+Do you want me to: a) Update your script to create an auth_identity row and then insert provider_identity (recommended)? — I can generate the complete SQL and run it. b) Make provider_identity.auth_identity_id nullable? — I can generate the ALTER TABLE and run it, but this changes schema constraints (use with caution). c) Change the script to skip creating provider_identity when no auth_identity exists? — I can edit the script accordingly.
+Tell me which option you want and I will produce the exact SQL (and execute it if you ask).

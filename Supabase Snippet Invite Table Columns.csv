@@ -1,0 +1,10 @@
+column_name,data_type
+id,text
+email,text
+accepted,boolean
+token,text
+expires_at,timestamp with time zone
+metadata,jsonb
+created_at,timestamp with time zone
+updated_at,timestamp with time zone
+deleted_at,timestamp with time zone

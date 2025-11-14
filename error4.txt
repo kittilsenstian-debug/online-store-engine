@@ -1,0 +1,107 @@
+Powershell:
+
+http:    GET /app/login ← - (200) - 18.090 ms
+http:    GET /app/entry.jsx ← http://localhost:9000/app/login (200) - 232.244 ms
+http:    GET /app/index.css ← http://localhost:9000/app/entry.jsx (200) - 1767.115 ms
+http:    GET /admin/feature-flags ← http://localhost:9000/app/login (200) - 5.315 ms
+http:    POST /auth/user/emailpass ← http://localhost:9000/app/login (200) - 93.267 ms
+http:    POST /auth/session ← http://localhost:9000/app/login (200) - 3.318 ms
+info:    User with id: user_01K9ZSQWQ3SSXCE9W9R3JJ0V55 was not found
+http:    GET /admin/users/me ← http://localhost:9000/app/orders (404) - 23.981 ms
+info:    User with id: user_01K9ZSQWQ3SSXCE9W9R3JJ0V55 was not found
+http:    GET /admin/users/me ← http://localhost:9000/app/orders (404) - 20.030 ms
+
+Ran this SQL:
+
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND (table_name LIKE '%auth%' OR table_name LIKE '%session%' OR table_name LIKE '%identity%')
+ORDER BY table_name;
+
+check Supabase Snippet Auth_Session_Identity Table Finder.csv in root for output.
+
+Ran this SQL:
+
+-- If these tables exist, delete from them:
+DELETE FROM auth_provider WHERE entity_id = 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55';
+DELETE FROM auth_identity WHERE entity_id = 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55';
+DELETE FROM session WHERE user_id = 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55';
+-- Try these even if you're not sure they exist - they'll just fail silently if the table doesn't exist
+
+Got error:
+
+Error: Failed to run sql query: ERROR: 42P01: relation "auth_provider" does not exist LINE 2: DELETE FROM auth_provider WHERE entity_id = 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55'; ^
+
+Supabase SQL debug assistant said:
+
+Help me to debug the attached sql snippet which gives the following error:
+
+Failed to run sql query: ERROR: 42P01: relation "auth_provider" does not exist LINE 2: DELETE FROM auth_provider WHERE entity_id = 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55'; ^
+
+-- If these tables exist, delete from them:...
+
+
+
+Reasoned
+I'll list the tables in your database (public and relevant schemas) to check where these tables live and whether their names differ or are namespaced. I'll call the list_tables tool with schemas public, auth, storage, realtime.
+
+
+Ran list_tables
+
+Reasoned
+Summary
+Cause: Your DELETE failed because the table name in the SQL (auth_provider) does not exist in the database. From the schema listing, I can see several auth-related tables — e.g. auth.sso_providers, auth.saml_providers, auth.identities, and in public schema provider_identity — but no table named auth_provider.
+
+Recommendations / Fixes
+If you intended to delete SSO provider rows in the auth schema, use the correct table name and column. For example, to remove a SAML provider with entity_id (column name in this DB is entity_id on auth.saml_providers) you can run:
+SQL Query
+
+
+
+DELETE FROM auth.saml_providers WHERE entity_id = 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55';
+
+If you intended to delete identity/provider records linked to the application user, consider these tables that exist in your DB:
+auth.identities (has provider, identity_data, user_id)
+auth.sso_providers (resource_id)
+auth.saml_providers (entity_id)
+auth.sso_domains (sso_provider_id)
+auth.sessions (user_id)
+public.provider_identity (has entity_id column)
+public.auth_identity (you have a public.auth_identity table but not auth_identity — note schema mismatch)
+Example safe sequence to remove related rows for that user id (adapt to exact IDs and desired scope). These statements use the actual table names present in your DB. Run them only if you intend to permanently delete:
+Remove from public.provider_identity by entity_id:
+SQL Query
+
+
+
+DELETE FROM public.provider_identity
+WHERE entity_id = 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55';
+
+Remove from public.auth_identity (exists in public):
+SQL Query
+
+
+
+DELETE FROM public.auth_identity
+WHERE id IN (
+  SELECT auth_identity_id FROM public.provider_identity
+  WHERE entity_id = 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55'
+);
+
+(Only needed if you want to cascade deletes and if foreign key relationships permit.)
+
+Remove sessions from auth.sessions by user UUID (note: auth.sessions.user_id is uuid; your provided id looks like a custom string — confirm value):
+SQL Query
+
+
+
+DELETE FROM auth.sessions
+WHERE user_id = '<actual-uuid-of-user>';
+
+Important: the value 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55' looks like an application-level id (Medusa/other) not the Auth schema UUID. Confirm whether the entity_id column or user_id column holds that value in the respective table before deleting.
+
+How to proceed (pick one)
+If you want, I can:
+(A) Build exact DELETE statements for the tables you want to clean up once you confirm which table(s) and which column contain 'user_01K9ZSQWQ3SSXCE9W9R3JJ0V55' (and confirm you want permanent deletion).
+(B) Run queries to show rows matching that identifier across candidate tables (I can prepare SQL SELECTs and execute them if you confirm). Choose A or B and confirm whether I should execute any destructive statements.

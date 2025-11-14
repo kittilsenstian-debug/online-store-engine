@@ -1,0 +1,43 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Users\kitti> cd C:\online-store-engine
+PS C:\online-store-engine>    npx medusa exec ./src/scripts/set-password-via-api.ts
+info:    redisUrl not found. A fake redis instance will be used.
+info:    Executing script at ./src/scripts/set-password-via-api.ts...
+info:    redisUrl not found. A fake redis instance will be used.
+info:    No link to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+warn:    Local Event Bus installed. This is not recommended for production.
+info:    Locking module: Using "in-memory" as default.
+error:   Error syncing the notification providers: select "n0".* from "notification_provider" as "n0" where "n0"."deleted_at" is null order by "n0"."id" asc - relation "notification_provider" does not exist
+info:    No workflow to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\workflows. skipped.
+info:    Setting password via Medusa API...
+info:    Found user: Kittilsen.stian@gmail.com (ID: user_01KA00BB9FW0EM4E4TT4CYEX0P)
+error:   Error: Trying to query by not existing property AuthIdentity.entity_id
+error:   Error: Trying to query by not existing property AuthIdentity.entity_id
+    at new CriteriaNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNode.js:35:27)
+    at new ScalarCriteriaNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\ScalarCriteriaNode.js:10:1)
+    at CriteriaNodeFactory.createScalarNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:24:22)
+    at CriteriaNodeFactory.createNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:21:21)
+    at CriteriaNodeFactory.createObjectItemNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:59:25)
+    at C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:44:28
+    at Array.reduce (<anonymous>)
+    at CriteriaNodeFactory.createObjectNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:43:45)
+    at CriteriaNodeFactory.createNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:19:25)
+    at C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:31:28
+error:   Error running script
+error:   Trying to query by not existing property AuthIdentity.entity_id
+Error: Trying to query by not existing property AuthIdentity.entity_id
+    at new CriteriaNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNode.js:35:27)
+    at new ScalarCriteriaNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\ScalarCriteriaNode.js:10:1)
+    at CriteriaNodeFactory.createScalarNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:24:22)
+    at CriteriaNodeFactory.createNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:21:21)
+    at CriteriaNodeFactory.createObjectItemNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:59:25)
+    at C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:44:28
+    at Array.reduce (<anonymous>)
+    at CriteriaNodeFactory.createObjectNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:43:45)
+    at CriteriaNodeFactory.createNode (C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:19:25)
+    at C:\online-store-engine\node_modules\@mikro-orm\knex\query\CriteriaNodeFactory.js:31:28
+PS C:\online-store-engine>

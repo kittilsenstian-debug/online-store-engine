@@ -1,0 +1,166 @@
+This is solid troubleshooting advice for setting up admin access in Medusa v2 with Supabase Auth — especially useful when you're dealing with headless/self-hosted setups where the default UI doesn't include user registration.
+Let’s break down what’s happening and whether this will work (spoiler: yes, with one critical addition):
+
+What the SQL Does (and Why It’s Smart)
+sqlINSERT INTO invite (
+  id, email, accepted, token, expires_at, metadata, created_at, updated_at
+) VALUES (
+  gen_random_uuid(),
+  'xxx@gmail.com',
+  true,
+  gen_random_uuid()::text,
+  NOW() + INTERVAL '30 days',
+  '{"role": "admin"}'::jsonb,
+  NOW(), NOW()
+);
+
+Creates an invite for xxx@gmail.com
+Marks it as accepted: true → skips invite flow
+Sets metadata: { "role": "admin" } → tells Medusa to assign admin role on login
+Valid for 30 days
+
+This alone is NOT enough to log in.
+
+Critical Missing Step: auth.users + provider_identity
+Medusa v2 uses Supabase Auth under the hood. Even with an invite, login will fail unless:
+
+A user exists in auth.users
+A provider_identity links that user to Medusa
+
+
+Full Working Fix (Add This After the Invite)
+Run this in order:
+1. Create the user in Supabase Auth (via SQL or API)
+sql-- Insert into auth.users (this is how Supabase creates users)
+INSERT INTO auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  invited_at,
+  confirmation_token,
+  confirmation_sent_at,
+  recovery_sent_at,
+  email_change_sent_at,
+  last_sign_in_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  created_at,
+  updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',  -- default instance
+  gen_random_uuid(),                          -- user ID
+  'authenticated',
+  'authenticated',
+  'xxx@gmail.com',
+  crypt('xxx', gen_salt('bf')),               -- password: xxx
+  now(),
+  now(),
+  '',
+  now(),
+  now(),
+  now(),
+  now(),
+  '{"provider": "email", "providers": ["email"]}',
+  '{}',
+  false,
+  now(),
+  now()
+) RETURNING id;
+Note the RETURNING id; — save this UUID (let’s call it USER_ID)
+
+2. Create provider_identity in Medusa DB
+sqlINSERT INTO provider_identity (
+  provider,
+  entity_id,
+  provider_user_id,
+  user_metadata
+) VALUES (
+  'email',
+  'xxx@gmail.com',           -- same as email
+  'USER_ID_FROM_ABOVE',      -- the UUID from auth.users
+  '{"email": "xxx@gmail.com"}'
+);
+
+3. Now try logging in at http://localhost:9000/app
+Email: xxx@gmail.com
+Password: xxx
+→ Should work and grant admin access
+
+Bonus: Full SQL Script (Save as CREATE_ADMIN_USER.sql)
+sql-- Step 1: Create auth user
+WITH new_user AS (
+  INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, invited_at, confirmation_sent_at,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  ) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated', 'authenticated',
+    'xxx@gmail.com',
+    crypt('xxx', gen_salt('bf')),
+    now(), now(), now(),
+    '{"provider": "email", "providers": ["email"]}',
+    '{}', now(), now()
+  ) RETURNING id
+)
+
+-- Step 2: Create provider_identity
+INSERT INTO provider_identity (provider, entity_id, provider_user_id, user_metadata)
+SELECT
+  'email',
+  'xxx@gmail.com',
+  id,
+  '{"email": "xxx@gmail.com"}'
+FROM new_user;
+
+-- Step 3: Create admin invite
+INSERT INTO invite (
+  id, email, accepted, token, expires_at, metadata, created_at, updated_at
+) VALUES (
+  gen_random_uuid(),
+  'xxx@gmail.com',
+  true,
+  gen_random_uuid()::text,
+  NOW() + INTERVAL '30 days',
+  '{"role": "admin"}'::jsonb,
+  NOW(), NOW()
+);
+
+Common Errors You’ll See (and Fixes)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ErrorCauseFixInvalid login credentialsNo auth.users entryRun user insertNo provider identity foundMissing provider_identityAdd itInvite not found or expiredaccepted: false or wrong emailSet accepted: true, match emailRole not assignedmetadata.role missing/misspelledUse {"role": "admin"}

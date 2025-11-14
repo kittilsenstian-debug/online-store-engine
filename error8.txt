@@ -1,0 +1,58 @@
+Error: Failed to run sql query: ERROR: 23502: null value in column "id" of relation "provider_identity" violates not-null constraint DETAIL: Failing row contains (null, user_01KA00BB9FW0EM4E4TT4CYEX0P, emailpass, null, {"email": "Kittilsen.stian@gmail.com"}, {"email": "Kittilsen.stian@gmail.com", "provider": "emailpass", ..., 2025-11-14 02:01:36.332942+00, 2025-11-14 02:01:36.332942+00, null).
+
+AI debugger:
+
+Help me to debug the attached sql snippet which gives the following error:
+
+Failed to run sql query: ERROR: 23502: null value in column "id" of relation "provider_identity" violates not-null constraint DETAIL: Failing row contains (null, user_01KA00BB9FW0EM4E4TT4CYEX0P, emailpass, null, {"email": "Kittilsen.stian@gmail.com [blocked]"}, {"email": "Kittilsen.stian@gmail.com [blocked]", "provider": "emailpass", ..., 2025-11-14 02:01:36.332942+00, 2025-11-14 02:01:36.332942+00, null).
+
+-- Complete admin user creation for Medusa v2 with Supabase Auth (SIMPLIFIED)...
+
+
+
+Reasoned
+I'll gather schema context (tables and extensions) to help debug the failing INSERT into provider_identity. I'll list tables in public and auth schemas and list installed extensions.
+
+
+Ran list_tables
+
+Reasoned
+Diagnosis
+The error says a NULL was inserted into provider_identity.id, which violates the primary key NOT NULL constraint.
+
+From the schema you provided, provider_identity.id is the primary key and its data_type is text with NO default. That means inserts must supply id (or there must be a default generator). Your INSERT into provider_identity does not supply id — it only supplies provider, entity_id, auth_identity_id, provider_metadata, user_metadata. Therefore PostgreSQL attempts to insert id=NULL and fails.
+
+Two ways to fix:
+
+Provide an id value in the INSERT (recommended for Medusa-style tables which expect an id):
+Add id (e.g. gen_random_uuid()::text or a Medusa-style id) to the INSERT column list and SELECT results.
+Add a DEFAULT to the provider_identity.id column (only if you want DB to auto-generate):
+Alter the column to set a default e.g. gen_random_uuid()::text or a sequence, then future INSERTs without id will succeed.
+Which to use depends on your app expectations (Medusa often uses string IDs generated in app). Below are concise fixes.
+
+Fix option A — Supply id in your INSERT (quick, safe)
+Modify the provider_identity INSERT part to include id and generate a uuid::text:
+
+Replace your INSERT block with (illustrative SQL — run in your SQL editor):
+
+INSERT INTO provider_identity ( id, provider, entity_id, auth_identity_id, provider_metadata, user_metadata ) SELECT gen_random_uuid()::text, 'emailpass', 'user_01KA00BB9FW0EM4E4TT4CYEX0P', (SELECT auth_identity_id FROM find_existing_auth_identity), jsonb_build_object( 'supabase_user_id', new_auth_user.id::text, 'email', new_auth_user.email, 'provider', 'emailpass' ), jsonb_build_object('email', new_auth_user.email) FROM new_auth_user WHERE NOT EXISTS ( SELECT 1 FROM provider_identity WHERE entity_id = 'user_01KA00BB9FW0EM4E4TT4CYEX0P' AND provider = 'emailpass' );
+
+Validation: this explicitly sets a non-null id using gen_random_uuid()::text.
+
+Fix option B — Give provider_identity.id a default (DB-side)
+If you prefer DB to auto-generate ids, add a default:
+
+ALTER TABLE public.provider_identity ALTER COLUMN id SET DEFAULT gen_random_uuid()::text;
+
+After that your original INSERT will succeed (because id will be filled automatically). Note: this change affects all inserts and may not match app ID format expected by Medusa.
+
+Validation: run a test INSERT after altering default to confirm id is auto-populated.
+
+Additional notes / recommendations
+Check foreign key constraints: provider_identity.auth_identity_id references auth_identity.id — ensure find_existing_auth_identity returns a valid id if you expect to set it.
+If Medusa expects specific id formats (e.g., text UUIDs or prefixed strings), generate accordingly (e.g., concat('user_', gen_random_uuid()::text) only if compatible).
+For clarity/safety, explicitly include id in DML scripts used for imports/migrations._
+If you want, I can:
+
+Provide the exact ALTER TABLE and corrected INSERT statements ready to run, or
+Execute verification queries to see current rows in provider_identity and auth_identity (I can run read-only SQL if you want). Which next step do you want?

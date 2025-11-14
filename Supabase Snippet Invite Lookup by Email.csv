@@ -1,0 +1,2 @@
+id,email,accepted,token,expires_at,metadata,created_at,updated_at,deleted_at
+e2ebefe6-c9fa-4409-8e91-0217ef2fcd3a,Kittilsen.stian@gmail.com,true,4eec897f-7aa9-4048-84e6-3ccbfa9a6cae,2025-12-14 00:30:17.354253+00,"{""role"":""admin""}",2025-11-14 00:30:17.354253+00,2025-11-14 00:30:17.354253+00,null

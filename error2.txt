@@ -1,0 +1,77 @@
+said by supabase AI assistant:
+
+Problem analysis
+The snippet you pasted shows an INSERT ... VALUES but the corresponding INSERT INTO clause (the target table and column list) is missing from what you pasted. From the values list I can infer you're inserting these values:
+
+gen_random_uuid() -> probably a token or id
+'Kittilsen.stian@gmail.com [blocked]' -> email
+'admin' -> role
+true -> accepted (or similar)
+gen_random_uuid()::text -> maybe created_by or invite_id_text
+NOW() + INTERVAL '30 days' -> expires_at
+NOW() -> created_at
+NOW() -> updated_at
+The error you saw earlier—column "role" of relation "invite" does not exist—means the column name role (used in your INSERT column list, or referenced elsewhere) is not actually a column on the invite table. Two likely causes given your pasted fragment:
+
+Your INSERT INTO clause had an explicit column list that included role, but the invite table doesn't have a role column (maybe it's roles, user_role, role_id, or level).
+You omitted the INSERT INTO column list and Postgres attempted to map values to table columns in order (but since the table definition doesn't match, references elsewhere fail).
+What to do next
+Confirm the invite table columns. Run (or paste the results if you can't run it):
+
+SQL Query
+
+
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'invite'
+ORDER BY ordinal_position;
+
+If you can't run that, run psql meta command: \d invite
+
+If role is not listed, either:
+
+Change your INSERT to use the actual column name the table uses for that value (for example user_role, role_id, or role_name), or
+Add the column to the table with an explicit ALTER TABLE if that column should exist:
+SQL Query
+
+
+
+ALTER TABLE public.invite ADD COLUMN role text;
+
+(I will not run destructive DDL unless you confirm.)
+If the column exists but under a different schema, fully qualify the table (e.g., public.invite) or set search_path appropriately.
+
+Example corrected INSERT patterns
+
+If the invite table columns are (token, email, role, accepted, code, expires_at, created_at, updated_at), then:
+
+SQL Query
+
+
+
+INSERT INTO public.invite (
+  token, email, role, accepted, code, expires_at, created_at, updated_at
+) VALUES (
+  gen_random_uuid(),
+  'Kittilsen.stian@gmail.com',
+  'admin',
+  true,
+  gen_random_uuid()::text,
+  NOW() + INTERVAL '30 days',
+  NOW(),
+  NOW()
+) ON CONFLICT DO NOTHING;
+
+If the column is named user_role instead of role, use:
+
+SQL Query
+
+
+
+INSERT INTO public.invite (
+  token, email, user_role, accepted, code, expires_at, created_at, updated_at
+) VALUES (...);
+
+Next step for me
+Please paste the output of the information_schema query (or the table definition) so I can give the exact corrected INSERT statement. If you prefer me to propose a DDL change (adding the role column), confirm and I'll provide the exact ALTER TABLE statement and any recommended defaults/constraints.

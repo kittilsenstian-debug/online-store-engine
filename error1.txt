@@ -1,0 +1,48 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Users\kitti> cd C:\online-store-engine
+PS C:\online-store-engine> npm run dev
+
+> medusa-starter-default@0.0.1 dev
+> medusa develop
+
+info:    Watching filesystem to reload dev server on file change
+info:    Skipping instrumentation registration. No register function found.
+info:    No link to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+warn:    Local Event Bus installed. This is not recommended for production.
+info:    Locking module: Using "in-memory" as default.
+info:    No workflow to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\workflows. skipped.
+info:    No subscriber to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\subscribers. skipped.
+info:    No job to load from C:\online-store-engine\node_modules\@medusajs\medusa\dist\jobs. skipped.
+info:    No job to load from C:\online-store-engine\node_modules\@medusajs\draft-order\.medusa\server\src\jobs. skipped.
+[ioredis] Unhandled error event: AggregateError
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[ioredis] Unhandled error event: AggregateError
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+✔ Server is ready on port: 9000 – 8ms
+info:    Admin URL → http://localhost:9000/app
+[ioredis] Unhandled error event: AggregateError
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[ioredis] Unhandled error event: AggregateError
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[ioredis] Unhandled error event: AggregateError
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[ioredis] Unhandled error event: AggregateError
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[ioredis] Unhandled error event: AggregateError
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[ioredis] Unhandled error event: AggregateError
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+info:    Gracefully shutting down server
+PS C:\online-store-engine>
