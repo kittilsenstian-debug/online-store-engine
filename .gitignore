@@ -24,3 +24,10 @@ build
 !.yarn/versions
 
 .medusa
+
+# Credential files - DO NOT COMMIT
+github-cred.txt
+vipps-cred.txt
+misc credentials.txt
+*.cred.txt
+*credentials*.txt
